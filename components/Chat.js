@@ -21,6 +21,7 @@ export default function Chat(props) {
   );
 }
 
+//Create a style sheet for the App.
 const styles = StyleSheet.create({
   container: {
     flex: 1,
