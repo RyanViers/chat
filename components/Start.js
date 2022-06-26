@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import React, { useState } from 'react';
 import {
   StyleSheet,
   View,
@@ -17,8 +17,8 @@ import BackgroundImage from '../assets/BackgroundImage.png';
 //be able to enter their name and pick background color.
 export default function Start(props) {
   // Create a state variable to store the user's name.
-  const [name, setName] = React.useState('');
-  const [bgColor, setBgColor] = React.useState('#fff');
+  const [name, setName] = useState('');
+  const [bgColor, setBgColor] = useState('#fff');
 
   //Colors array for user to pick for background color.
   const colors = {
