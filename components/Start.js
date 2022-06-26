@@ -10,7 +10,7 @@ import {
   Pressable,
 } from 'react-native';
 
-// Import default background Image.
+// Import default background image.
 import BackgroundImage from '../assets/BackgroundImage.png';
 
 //Create a functional component for the main screen. Users will see this screen when they open the app and
