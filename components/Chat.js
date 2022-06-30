@@ -1,10 +1,24 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { StyleSheet, View, Text, Button } from 'react-native';
 
 //Create a functional component for the chat screen.
 export default function Chat(props) {
   //Create variables for the user's name and background color props.
   let { name, bgColor } = props.route.params;
+  let [messages, setMessages] = useState([]);
+
+  setMessages([
+    {
+      id: 1,
+      text: 'Hello Developer',
+      createdAt: new Date(),
+      user: {
+        _id: 2,
+        name: 'React Native',
+        avatar: 'https://placeimg.com/140/140/any',
+      },
+    },
+  ]);
 
   useEffect(() => {
     props.navigation.setOptions({ title: name });
