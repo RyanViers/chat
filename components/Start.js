@@ -122,7 +122,7 @@ const styles = StyleSheet.create({
     height: '60%',
     width: '88%',
     alignItems: 'center',
-    marginBottom: 200,
+    marginBottom: 50,
     justifyContent: 'space-around',
   },
 
