@@ -1,5 +1,6 @@
-import React, { useEffect, useState } from 'react';
-import { StyleSheet, View, Text, Button } from 'react-native';
+import React, { useEffect, useState, useCallback } from 'react';
+import { StyleSheet, View, Platform, KeyboardAvoidingView } from 'react-native';
+import { GiftedChat, Bubble } from 'react-native-gifted-chat';
 
 //Create a functional component for the chat screen.
 export default function Chat(props) {
@@ -7,32 +8,69 @@ export default function Chat(props) {
   let { name, bgColor } = props.route.params;
   let [messages, setMessages] = useState([]);
 
-  setMessages([
-    {
-      id: 1,
-      text: 'Hello Developer',
-      createdAt: new Date(),
-      user: {
-        _id: 2,
-        name: 'React Native',
-        avatar: 'https://placeimg.com/140/140/any',
-      },
-    },
-  ]);
+  //Create a function to handle the messages.
+  const onSend = useCallback((messages = []) => {
+    setMessages((previousMessages) =>
+      GiftedChat.append(previousMessages, messages)
+    );
+  });
 
+  //Use the useEffect hook to set the messages.
   useEffect(() => {
     props.navigation.setOptions({ title: name });
-  }, [name, bgColor]);
+    props.navigation.setOptions({ headerShown: true });
+    setMessages([
+      {
+        _id: 1,
+        text: 'Hello Developer',
+        createdAt: new Date(),
+        user: {
+          _id: 2,
+          name: 'React Native',
+          avatar: 'https://placeimg.com/140/140/any',
+        },
+      },
+      {
+        _id: 2,
+        text: 'This is a test message',
+        createdAt: new Date(),
+        system: true,
+      },
+    ]);
+  }, [name]);
+
+  //Customize the text bubble color.
+  const renderBubble = (props) => {
+    return (
+      <Bubble
+        {...props}
+        wrapperStyle={{
+          right: {
+            backgroundColor: '#000',
+            padding: 10,
+          },
+          left: {
+            backgroundColor: '#fff',
+            padding: 10,
+          },
+        }}
+      />
+    );
+  };
 
   return (
-    <View style={{ backgroundColor: bgColor, height: '100%', width: '100%' }}>
-      <View style={styles.container}>
-        {/*<Text style={styles.text}>{name}</Text>*/}
-        <Button
-          title="Back to Start"
-          onPress={() => props.navigation.navigate('Start')}
-        />
-      </View>
+    <View style={[{ backgroundColor: bgColor }, styles.container]}>
+      <GiftedChat
+        renderBubble={renderBubble.bind()}
+        messages={messages}
+        onSend={(messages) => onSend(messages)}
+        user={{
+          _id: 1,
+        }}
+      />
+      {Platform.OS === 'android' ? (
+        <KeyboardAvoidingView behavior="height" />
+      ) : null}
     </View>
   );
 }
@@ -41,14 +79,5 @@ export default function Chat(props) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-
-  text: {
-    fontSize: 30,
-    color: 'black',
-    fontWeight: 'bold',
-    textAlign: 'center',
   },
 });
