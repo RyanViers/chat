@@ -122,6 +122,7 @@ const styles = StyleSheet.create({
     height: '60%',
     width: '88%',
     alignItems: 'center',
+    marginBottom: 200,
     justifyContent: 'space-around',
   },
 
@@ -146,6 +147,8 @@ const styles = StyleSheet.create({
   colorBox: {
     height: '20%',
     width: '88%',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 
   chooseColor: {
