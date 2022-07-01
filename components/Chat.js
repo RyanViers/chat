@@ -2,6 +2,9 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { StyleSheet, View, Platform, KeyboardAvoidingView } from 'react-native';
 import { GiftedChat, Bubble } from 'react-native-gifted-chat';
 
+const firebase = require('firebase');
+require('firebase/firestore');
+
 //Create a functional component for the chat screen.
 export default function Chat(props) {
   //Create variables for the user's name and background color props.
