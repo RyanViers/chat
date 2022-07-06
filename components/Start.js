@@ -29,6 +29,24 @@ export default function Start(props) {
     green: '#00ff00',
   };
 
+  //Create handle function to send user's name and background color to the chat screen after authentication.
+  const handleSubmit = () => {
+    props.navigation.navigate('Chat', { name: name, bgColor: bgColor });
+  };
+  /*signInAnonymously(auth)
+      .then(
+        () => {
+          props.navigation.navigate('Chat', { name: name, bgColor: bgColor });
+          console.log('Signed in anonymously!');
+        }
+        //If the user is not authenticated, display an error message.
+      )
+      .catch((error) => {
+        alert(error.message);
+        console.log(`Error: ${error.message}`);
+      });
+  };*/
+
   return (
     <View style={styles.container}>
       <ImageBackground source={BackgroundImage} style={styles.backgroundImage}>
@@ -78,12 +96,7 @@ export default function Start(props) {
           <Button
             title="Start Chat"
             style={styles.button}
-            onPress={() =>
-              props.navigation.navigate('Chat', {
-                name: name,
-                bgColor: bgColor,
-              })
-            }
+            onPress={handleSubmit}
           />
         </View>
       </ImageBackground>
