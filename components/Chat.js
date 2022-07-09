@@ -10,10 +10,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { StyleSheet, View, Platform, KeyboardAvoidingView } from 'react-native';
 import { GiftedChat, Bubble } from 'react-native-gifted-chat';
 import { db, auth } from './firebase/firebase-config';
-import { onAuthStateChanged, signInAnonymously, signOut } from 'firebase/auth';
-
-//const firebase = require('firebase');
-//require('firebase/firestore');
+import { onAuthStateChanged, signInAnonymously } from 'firebase/auth';
 
 //Create a functional component for the chat screen.
 export default function Chat(props) {
@@ -43,7 +40,18 @@ export default function Chat(props) {
         signInAnonymously(auth);
       }
       setLoggedUser(user.uid);
-      setMessages([]);
+      setMessages([
+        {
+          _id: 1,
+          text: 'Welcome to the chat app!',
+          createdAt: new Date(),
+          user: {
+            _id: 2,
+            name: 'React Native',
+            avatar: 'https://placeimg.com/140/140/any',
+          },
+        },
+      ]);
     });
 
     //Create a function to get users messages that match users name and id.
@@ -53,6 +61,7 @@ export default function Chat(props) {
       where('user._id', '==', loggedUser)
     );
 
+    //Create a function to get the messages from the database.
     const unsubscribe = onSnapshot(messageQuery, onCollectionUpdate);
 
     //Remove the listener when the component unmounts.

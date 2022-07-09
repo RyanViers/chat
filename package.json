@@ -30,5 +30,17 @@
   "devDependencies": {
     "@babel/core": "^7.12.9"
   },
-  "private": true
+  "private": true,
+  "description": "This project is a chat application built with React Native to use the same codebase for updates and development across different OS (iOS & Android).",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/RyanViers/chat.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/RyanViers/chat/issues"
+  },
+  "homepage": "https://github.com/RyanViers/chat#readme"
 }
