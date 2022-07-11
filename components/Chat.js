@@ -8,19 +8,51 @@ import {
 } from 'firebase/firestore';
 import React, { useEffect, useState, useCallback } from 'react';
 import { StyleSheet, View, Platform, KeyboardAvoidingView } from 'react-native';
-import { GiftedChat, Bubble } from 'react-native-gifted-chat';
+import { GiftedChat, Bubble, InputToolbar } from 'react-native-gifted-chat';
 import { db, auth } from './firebase/firebase-config';
 import { onAuthStateChanged, signInAnonymously } from 'firebase/auth';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import NetInfo from '@react-native-community/netinfo';
 
 //Create a functional component for the chat screen.
 export default function Chat(props) {
   //Create variables for the user's name and background color props.
-  let { name, bgColor } = props.route.params;
-  let [messages, setMessages] = useState([]);
-  let [loggedUser, setLoggedUser] = useState('');
+  const { name, bgColor } = props.route.params;
+  const [messages, setMessages] = useState([]);
+  const [loggedUser, setLoggedUser] = useState('');
+  const [isConnected, setIsConnected] = useState();
 
   //Create a function to get the user's messages from the database.
   const messagesCollection = collection(db, 'messages');
+
+  //Retrieve messages from async storage.
+  const getMessages = async () => {
+    let messages = '';
+    try {
+      messages = await AsyncStorage.getItem('messages');
+      setMessages(JSON.parse(messages));
+    } catch (e) {
+      console.log(e);
+    }
+  };
+
+  //Save messages to async storage.
+  const saveMessages = async () => {
+    try {
+      await AsyncStorage.setItem('messages', JSON.stringify(messages));
+    } catch (e) {
+      console.log(e);
+    }
+  };
+
+  //Delete messages from async storage.
+  const deleteMessages = async () => {
+    try {
+      await AsyncStorage.removeItem('messages');
+    } catch (e) {
+      console.log(e);
+    }
+  };
 
   //Create a function to handle the messages.
   const onSend = useCallback((messages = []) => {
@@ -35,41 +67,55 @@ export default function Chat(props) {
     props.navigation.setOptions({ title: name });
     props.navigation.setOptions({ headerShown: true });
 
-    const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
-      if (!user) {
-        signInAnonymously(auth);
+    //Check if user is online using NetInfo.
+    NetInfo.fetch().then((connection) => {
+      if (connection.isConnected) {
+        setIsConnected(true);
+      } else {
+        setIsConnected(false);
       }
-      setLoggedUser(user.uid);
-      setMessages([
-        {
-          _id: 1,
-          text: 'Welcome to the chat app!',
-          createdAt: new Date(),
-          user: {
-            _id: 2,
-            name: 'React Native',
-            avatar: 'https://placeimg.com/140/140/any',
-          },
-        },
-      ]);
     });
 
-    //Create a function to get users messages that match users name and id.
-    const messageQuery = query(
-      messagesCollection,
-      orderBy('createdAt', 'desc'),
-      where('user._id', '==', loggedUser)
-    );
+    if (isConnected) {
+      const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
+        if (!user) {
+          signInAnonymously(auth);
+        }
+        setLoggedUser(user.uid);
+        setMessages([]);
+        /*setMessages([
+          {
+            _id: 1,
+            text: 'Welcome to the chat app!',
+            createdAt: new Date(),
+            user: {
+              _id: 2,
+              name: 'React Native',
+              avatar: 'https://placeimg.com/140/140/any',
+            },
+          },
+        ]);*/
+      });
 
-    //Create a function to get the messages from the database.
-    const unsubscribe = onSnapshot(messageQuery, onCollectionUpdate);
+      //Create a function to get users messages that match users name and id.
+      const messageQuery = query(
+        messagesCollection,
+        orderBy('createdAt', 'desc'),
+        where('user._id', '==', loggedUser)
+      );
 
-    //Remove the listener when the component unmounts.
-    return () => {
-      unsubscribe();
-      unsubscribeAuth();
-    };
-  }, []);
+      //Create a function to get the messages from the database.
+      const unsubscribe = onSnapshot(messageQuery, onCollectionUpdate);
+
+      //Remove the listener when the component unmounts.
+      return () => {
+        unsubscribe();
+        unsubscribeAuth();
+      };
+    } else {
+      getMessages();
+    }
+  }, [isConnected]);
 
   //Create a function to handle collection updates.
   const onCollectionUpdate = (querySnapshot) => {
@@ -84,13 +130,14 @@ export default function Chat(props) {
       });
     });
     setMessages(messagesArray);
+    saveMessages(messagesArray);
   };
 
   //Create a function to add a message to the database.
   const addMessage = (message) => {
     addDoc(messagesCollection, {
       _id: message._id,
-      text: message.text,
+      text: message.text || '',
       createdAt: message.createdAt,
       user: message.user,
     });
@@ -115,10 +162,20 @@ export default function Chat(props) {
     );
   };
 
+  //Hide input bar if user is offline.
+  const renderInputToolbar = (props) => {
+    if (!isConnected) {
+      //Hide input bar if user is offline.
+    } else {
+      return <InputToolbar {...props} />;
+    }
+  };
+
   return (
     <View style={[{ backgroundColor: bgColor }, styles.container]}>
       <GiftedChat
         renderBubble={renderBubble.bind()}
+        renderInputToolbar={renderInputToolbar.bind()}
         messages={messages}
         onSend={(messages) => onSend(messages)}
         user={{
