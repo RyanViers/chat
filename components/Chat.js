@@ -1,3 +1,4 @@
+import React, { useEffect, useState, useCallback } from 'react';
 import {
   collection,
   orderBy,
@@ -6,13 +7,14 @@ import {
   addDoc,
   where,
 } from 'firebase/firestore';
-import React, { useEffect, useState, useCallback } from 'react';
 import { StyleSheet, View, Platform, KeyboardAvoidingView } from 'react-native';
 import { GiftedChat, Bubble, InputToolbar } from 'react-native-gifted-chat';
 import { db, auth } from './firebase/firebase-config';
 import { onAuthStateChanged, signInAnonymously } from 'firebase/auth';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import NetInfo from '@react-native-community/netinfo';
+import CustomActions from './CustomActions';
+import MapView from 'react-native-maps';
 
 //Create a functional component for the chat screen.
 export default function Chat(props) {
@@ -29,7 +31,7 @@ export default function Chat(props) {
   const getMessages = async () => {
     let messages = '';
     try {
-      messages = await AsyncStorage.getItem('messages');
+      messages = (await AsyncStorage.getItem('messages')) || [];
       setMessages(JSON.parse(messages));
     } catch (e) {
       console.log(e);
@@ -60,7 +62,7 @@ export default function Chat(props) {
       GiftedChat.append(previousMessages, messages)
     );
     addMessage(messages[0]);
-  });
+  }, []);
 
   //Use the useEffect hook to set the messages.
   useEffect(() => {
@@ -77,34 +79,21 @@ export default function Chat(props) {
     });
 
     if (isConnected) {
+      //Create a function to get users messages that match users name and id.
+      const messageQuery = query(
+        messagesCollection,
+        orderBy('createdAt', 'desc')
+      );
+
+      //Create a listener for authentication state changes.
       const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
         if (!user) {
           signInAnonymously(auth);
         }
         setLoggedUser(user.uid);
-        setMessages([]);
-        /*setMessages([
-          {
-            _id: 1,
-            text: 'Welcome to the chat app!',
-            createdAt: new Date(),
-            user: {
-              _id: 2,
-              name: 'React Native',
-              avatar: 'https://placeimg.com/140/140/any',
-            },
-          },
-        ]);*/
       });
 
-      //Create a function to get users messages that match users name and id.
-      const messageQuery = query(
-        messagesCollection,
-        orderBy('createdAt', 'desc'),
-        where('user._id', '==', loggedUser)
-      );
-
-      //Create a function to get the messages from the database.
+      //Create a listener for collection changes.
       const unsubscribe = onSnapshot(messageQuery, onCollectionUpdate);
 
       //Remove the listener when the component unmounts.
@@ -122,11 +111,16 @@ export default function Chat(props) {
     const messagesArray = [];
     querySnapshot.forEach((doc) => {
       let data = doc.data();
-      messages.push({
+      messagesArray.push({
         _id: data._id,
         text: data.text,
         createdAt: data.createdAt.toDate(),
-        user: data.user,
+        user: {
+          _id: data.user._id,
+          name: data.user.name,
+        },
+        image: data.image,
+        location: data.location,
       });
     });
     setMessages(messagesArray);
@@ -140,6 +134,8 @@ export default function Chat(props) {
       text: message.text || '',
       createdAt: message.createdAt,
       user: message.user,
+      image: message.image || null,
+      location: message.location || null,
     });
   };
 
@@ -150,11 +146,11 @@ export default function Chat(props) {
         {...props}
         wrapperStyle={{
           right: {
-            backgroundColor: '#000',
+            backgroundColor: '#D3D3D3',
             padding: 10,
           },
           left: {
-            backgroundColor: '#fff',
+            backgroundColor: '#848884',
             padding: 10,
           },
         }}
@@ -171,10 +167,39 @@ export default function Chat(props) {
     }
   };
 
+  const renderCustomActions = (props) => {
+    return <CustomActions {...props} />;
+  };
+
+  const renderCustomView = (props) => {
+    const { currentMessage } = props;
+    if (currentMessage.location) {
+      return (
+        <MapView
+          style={{
+            width: 150,
+            height: 100,
+            borderRadius: 13,
+            margin: 3,
+          }}
+          region={{
+            latitude: currentMessage.location.latitude,
+            longitude: currentMessage.location.longitude,
+            latitudeDelta: 0.0922,
+            longitudeDelta: 0.0421,
+          }}
+        />
+      );
+    }
+    return null;
+  };
+
   return (
     <View style={[{ backgroundColor: bgColor }, styles.container]}>
       <GiftedChat
         renderBubble={renderBubble.bind()}
+        renderActions={renderCustomActions}
+        renderCustomView={renderCustomView}
         renderInputToolbar={renderInputToolbar.bind()}
         messages={messages}
         onSend={(messages) => onSend(messages)}
