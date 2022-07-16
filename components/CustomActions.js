@@ -6,14 +6,12 @@ import { StyleSheet, Text, View, TouchableOpacity } from 'react-native';
 import { useChatContext } from 'react-native-gifted-chat/lib/GiftedChatContext';
 import { storage } from './firebase/firebase-config';
 import { getDownloadURL, ref, uploadBytes } from 'firebase/storage';
-//import { useActionSheet } from '@expo/react-native-action-sheet';
-//import { Actions } from 'react-native-gifted-chat';
 
 export default function CustomActions(props) {
-  //const { onSend } = useChatContext();
-  //const { actionSheet } = useChatContext();
-  //const { useActionSheetWithOptions } = useActionSheet();
+  //Create a useChatContext hook to access the context.
+  const { actionSheet } = useChatContext();
 
+  //Create a function to upload the image to firebase.
   const uploadImage = async (uri) => {
     //Get uri and turn it into a blob.
     const img = await fetch(uri);
@@ -29,8 +27,6 @@ export default function CustomActions(props) {
     //Upload image to storage.
     await uploadBytes(newImageRef, imgBlob).then(async (snapshot) => {
       console.log('Uploaded a blob or file!');
-      //imgBlob.close();
-      //return await getDownloadURL(newImageRef);
     });
 
     //Return the download url.
@@ -109,8 +105,6 @@ export default function CustomActions(props) {
       props.onSend({ location: { latitude, longitude } });
     }
   };
-
-  const { actionSheet } = useChatContext();
 
   const onActionPress = () => {
     const options = [

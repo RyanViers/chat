@@ -5,7 +5,6 @@ import {
   query,
   onSnapshot,
   addDoc,
-  where,
 } from 'firebase/firestore';
 import { StyleSheet, View, Platform, KeyboardAvoidingView } from 'react-native';
 import { GiftedChat, Bubble, InputToolbar } from 'react-native-gifted-chat';
@@ -79,19 +78,19 @@ export default function Chat(props) {
     });
 
     if (isConnected) {
-      //Create a function to get users messages that match users name and id.
-      const messageQuery = query(
-        messagesCollection,
-        orderBy('createdAt', 'desc')
-      );
-
       //Create a listener for authentication state changes.
-      const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
+      const authUnsubscribe = onAuthStateChanged(auth, (user) => {
         if (!user) {
           signInAnonymously(auth);
         }
         setLoggedUser(user.uid);
       });
+
+      //Create a function to get users messages that match users name and id.
+      const messageQuery = query(
+        messagesCollection,
+        orderBy('createdAt', 'desc')
+      );
 
       //Create a listener for collection changes.
       const unsubscribe = onSnapshot(messageQuery, onCollectionUpdate);
@@ -99,7 +98,7 @@ export default function Chat(props) {
       //Remove the listener when the component unmounts.
       return () => {
         unsubscribe();
-        unsubscribeAuth();
+        authUnsubscribe();
       };
     } else {
       getMessages();
@@ -147,11 +146,10 @@ export default function Chat(props) {
         wrapperStyle={{
           right: {
             backgroundColor: '#D3D3D3',
-            padding: 10,
           },
           left: {
             backgroundColor: '#848884',
-            padding: 10,
+            marginLeft: -35,
           },
         }}
       />
