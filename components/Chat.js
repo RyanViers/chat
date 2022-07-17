@@ -149,7 +149,6 @@ export default function Chat(props) {
           },
           left: {
             backgroundColor: '#848884',
-            marginLeft: -35,
           },
         }}
       />
